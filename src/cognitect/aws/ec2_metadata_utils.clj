@@ -58,7 +58,7 @@
                           retry/default-backoff))]
     ;; TODO: handle unhappy paths -JS
     (when (= 200 (:status response))
-      (u/bbuf->str (:body response)))))
+      (u/->str (:body response)))))
 
 (defn get-data-at-path [path http-client]
   (get-data (build-uri (get-host-address) path) http-client))

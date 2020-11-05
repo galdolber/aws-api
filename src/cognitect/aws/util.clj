@@ -8,8 +8,7 @@
             [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.core.async :as a])
-  (:import [java.util.concurrent Executors ExecutorService ThreadFactory]
-           [java.text SimpleDateFormat]
+  (:import [java.text SimpleDateFormat]
            [java.util Date TimeZone]
            [java.util UUID]
            [java.io InputStream]
@@ -123,8 +122,11 @@
     (String. ^bytes bbuf "UTF-8")
     (if (string? bbuf)
       bbuf
-      (when-let [bytes (bbuf->bytes bbuf)]
-        (String. ^bytes bytes "UTF-8")))))
+      (if (instance? InputStream bbuf)
+        (let [bbuf (input-stream->byte-array bbuf)]
+          (String. ^bytes bbuf "UTF-8"))
+        (when-let [bytes (bbuf->bytes bbuf)]
+          (String. ^bytes bytes "UTF-8"))))))
 
 (defn bbuf->input-stream
   [^ByteBuffer bbuf]
