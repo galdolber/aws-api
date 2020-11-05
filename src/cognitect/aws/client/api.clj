@@ -7,7 +7,6 @@
             [clojure.tools.logging :as log]
             [cognitect.aws.client :as client]
             [cognitect.aws.retry :as retry]
-            [cognitect.aws.client.shared :as shared]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
@@ -55,9 +54,6 @@
                           (if the request is retriable?), or nil if it should stop.
                           Defaults to cognitect.aws.retry/default-backoff.
 
-  By default, all clients use shared http-client, credentials-provider, and
-  region-provider instances which use a small collection of daemon threads.
-
   Alpha. Subject to change."
   [{:keys [api region region-provider retriable? backoff credentials-provider endpoint-override
            http-client service]
@@ -69,8 +65,8 @@
       endpoint-override)))
   (let [region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
                                    region-provider region-provider
-                                   :else           (shared/region-provider))
-        credentials-provider (or credentials-provider (shared/credentials-provider))
+                                   :else           (throw (ex-info "region or region-provider expected" {})))
+        credentials-provider (or credentials-provider (throw (ex-info "credentials-provider expected" {})))
         endpoint-provider    (endpoint/default-endpoint-provider
                               api
                               (get-in service [:metadata :endpointPrefix])
