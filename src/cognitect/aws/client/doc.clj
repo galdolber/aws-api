@@ -1,7 +1,14 @@
 (ns cognitect.aws.client.doc
   (:require [clojure.string :as str]
-            [clojure.pprint :as pp]
+            [cognitect.aws.dynaload :as dynaload]
             [cognitect.aws.client.api :as api]))
+
+(def ^:private pprint-ref (delay (dynaload/load-var 'clojure.pprint/pprint)))
+(defn ^:skip-wiki pprint
+  "For internal use. Don't call directly."
+  [& args]
+  (binding [*print-namespace-maps* false]
+    (apply @pprint-ref args)))
 
 (defn doc-str
   "Given data produced by `ops`, returns a string
@@ -23,21 +30,21 @@
                        "-------------------------"
                        "Request"
                        ""
-                       (with-out-str (pp/pprint request))])
+                       (with-out-str (pprint request))])
                 required
                 (into ["Required"
                        ""
-                       (with-out-str (pp/pprint required))])
+                       (with-out-str (pprint required))])
                 response
                 (into ["-------------------------"
                        "Response"
                        ""
-                       (with-out-str (pp/pprint response))])
+                       (with-out-str (pprint response))])
                 refs
                 (into ["-------------------------"
                        "Given"
                        ""
-                       (with-out-str (pp/pprint refs))])))))
+                       (with-out-str (pprint refs))])))))
 
 (defn doc
   "Given a client and an operation (keyword), prints documentation
