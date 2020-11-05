@@ -9,7 +9,6 @@
             [cognitect.aws.retry :as retry]
             [cognitect.aws.client.shared :as shared]
             [cognitect.aws.endpoint :as endpoint]
-            [cognitect.aws.http :as http]
             [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
             [cognitect.aws.client.api.async :as api.async]

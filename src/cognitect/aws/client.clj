@@ -4,7 +4,6 @@
 (ns ^:skip-wiki cognitect.aws.client
   "Impl, don't call directly."
   (:require [clojure.core.async :as a]
-            [cognitect.aws.http :as http]
             [cognitect.aws.util :as util]
             [cognitect.aws.interceptors :as interceptors]
             [cognitect.aws.endpoint :as endpoint]
@@ -101,7 +100,7 @@
                                                       (update :body util/->bbuf)
                                                       ((partial interceptors/modify-http-request service op-map))))]
               (swap! response-meta assoc :http-request http-request)
-              (http/submit http-client http-request response-ch))
+              (http-client http-request response-ch))
             (catch Throwable t
               (put-throwable result-ch t response-meta op-map))))))
     (a/go
