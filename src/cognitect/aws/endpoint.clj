@@ -5,24 +5,11 @@
   "Impl, don't call directly."
   (:refer-clojure :exclude [resolve])
   (:require [clojure.string :as str]
-            [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [clojure.core.async :as a]
-            [cognitect.aws.service :as service]
-            [cognitect.aws.region :as region]
             [cognitect.aws.util :as util]))
 
-(defn descriptor-resource-path [] (format "%s/endpoints.edn" service/base-resource-path))
+(def endpoints (atom nil))
 
-(defn read-endpoints-description []
-  (if-let [resource (io/resource (descriptor-resource-path))]
-    (edn/read-string (slurp resource))
-    (throw (ex-info (str "Cannot find resource " (descriptor-resource-path) ".") {}))))
-
-(defn resolver
-  "Create a new endpoint resolver."
-  []
-  (read-endpoints-description))
+(defn set-endpoints [data] (reset! endpoints data))
 
 (defn render-template
   [template args]
@@ -72,8 +59,10 @@
   :signature-versions   A list of possible signature versions (optional).
   :protocols            A list of supported protocols."
   [service-key region]
-  (some #(partition-resolve % service-key region)
-        (:partitions (resolver))))
+  (if-let [{:keys [partitions]} @endpoints]
+    (some #(partition-resolve % service-key region) partitions)
+    (throw (ex-info "Endpoints are not defined" {:service-key service-key
+                                                 :region region}))))
 
 (def resolve (memoize resolve*))
 
