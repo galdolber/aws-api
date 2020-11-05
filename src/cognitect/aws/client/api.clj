@@ -6,14 +6,12 @@
   (:require [clojure.core.async :as a]
             [clojure.tools.logging :as log]
             [clojure.string :as str]
-            [cognitect.aws.dynaload :as dynaload]
             [cognitect.aws.client :as client]
             [cognitect.aws.retry :as retry]
             [cognitect.aws.client.shared :as shared]
             [cognitect.aws.credentials :as credentials]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.http :as http]
-            [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
             [cognitect.aws.client.api.async :as api.async]
             [cognitect.aws.signers] ;; implements multimethods
@@ -65,15 +63,14 @@
 
   Alpha. Subject to change."
   [{:keys [api region region-provider retriable? backoff credentials-provider endpoint endpoint-override
-           http-client]
+           http-client service]
     :or   {endpoint-override {}}}]
   (when (string? endpoint-override)
     (log/warn
      (format
       "DEPRECATION NOTICE: :endpoint-override string is deprecated.\nUse {:endpoint-override {:hostname \"%s\"}} instead."
       endpoint-override)))
-  (let [service              (service/service-description (name api))
-        http-client          (if http-client
+  (let [http-client          (if http-client
                                (http/resolve-http-client http-client)
                                (shared/http-client))
         region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
@@ -84,7 +81,6 @@
                               api
                               (get-in service [:metadata :endpointPrefix])
                               endpoint-override)]
-    (dynaload/load-ns (symbol (str "cognitect.aws.protocols." (get-in service [:metadata :protocol]))))
     (client/->Client
      (atom {'clojure.core.protocols/datafy (fn [c]
                                              (let [i (client/-get-info c)]
@@ -151,8 +147,8 @@
   [client op]
   (service/response-spec-key (-> client client/-get-info :service) op))
 
-(def ^:private pprint-ref (delay (dynaload/load-var 'clojure.pprint/pprint)))
-(defn ^:skip-wiki pprint
+#_(def ^:private pprint-ref (delay #'println))
+#_(defn ^:skip-wiki pprint
   "For internal use. Don't call directly."
   [& args]
   (binding [*print-namespace-maps* false]
@@ -168,7 +164,7 @@
        :service
        service/docs))
 
-(defn doc-str
+#_(defn doc-str
   "Given data produced by `ops`, returns a string
   representation.
 
@@ -204,7 +200,7 @@
                        ""
                        (with-out-str (pprint refs))])))))
 
-(defn doc
+#_(defn doc
   "Given a client and an operation (keyword), prints documentation
   for that operation to the current value of *out*. Returns nil.
 
