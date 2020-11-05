@@ -1,12 +1,11 @@
 (ns cognitect.aws.client.shared
-  (:require [cognitect.aws.http :as http]
-            [cognitect.aws.credentials :as credentials]
+  (:require [cognitect.aws.credentials :as credentials]
             [cognitect.aws.region :as region]))
 
 (declare http-client)
 
 (def ^:private shared-http-client
-  (delay (http/resolve-http-client nil)))
+  (delay nil))
 
 (def ^:private shared-credentials-provider
   (delay (credentials/default-credentials-provider (http-client))))
@@ -37,11 +36,3 @@
   Alpha. Subject to change."
   []
   @shared-region-provider)
-
-(defn ^:private shared-http-client?
-  "For internal use.
-
-  Alpha. Subject to change."
-  [candidate-http-client]
-  (identical? candidate-http-client
-              (and (realized? shared-http-client) @shared-http-client)))

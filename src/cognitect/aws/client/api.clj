@@ -68,10 +68,7 @@
      (format
       "DEPRECATION NOTICE: :endpoint-override string is deprecated.\nUse {:endpoint-override {:hostname \"%s\"}} instead."
       endpoint-override)))
-  (let [http-client          (if http-client
-                               (http/resolve-http-client http-client)
-                               (shared/http-client))
-        region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
+  (let [region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
                                    region-provider region-provider
                                    :else           (shared/region-provider))
         credentials-provider (or credentials-provider (shared/credentials-provider))
