@@ -25,7 +25,7 @@
   [uri-template {:keys [required] :as input-shape} args]
   (str/replace uri-template
                #"\{([^}]+)\}"
-               (fn [[_ param]]
+               (fn [[_ ^String param]]
                  (or (if (.endsWith param "+")
                        (some-> args
                                (get (keyword (.substring param 0 (dec (count param)))))
@@ -50,7 +50,7 @@
 
 (defn append-querystring
   "Append the map of arguments args to the uri's querystring."
-  [uri shape args]
+  [^String uri shape args]
   (if-let [qs (util/query-string (mapcat (fn [[k v]]
                                            (when-let [member-shape (shape/member-shape shape k)]
                                              (serialize-qs-args member-shape
