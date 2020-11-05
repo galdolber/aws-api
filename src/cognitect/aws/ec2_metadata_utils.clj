@@ -6,7 +6,6 @@
   (:require [clojure.string :as str]
             [clojure.data.json :as json]
             [clojure.core.async :as a]
-            [cognitect.aws.http :as http]
             [cognitect.aws.util :as u]
             [cognitect.aws.retry :as retry])
   (:import (java.net URI)))
@@ -53,7 +52,7 @@
 
 (defn get-data [uri http-client]
   (let [response (a/<!! (retry/with-retry
-                          #(http/submit http-client (request-map (URI. uri)))
+                          #(http-client (request-map (URI. uri)))
                           (a/promise-chan)
                           retry/default-retriable?
                           retry/default-backoff))]
