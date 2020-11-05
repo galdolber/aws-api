@@ -118,6 +118,14 @@
   (when-let [bytes (bbuf->bytes bbuf)]
     (String. ^bytes bytes "UTF-8")))
 
+(defn ->str [bbuf]
+  (if (bytes? bbuf)
+    (String. ^bytes bbuf "UTF-8")
+    (if (string? bbuf)
+      bbuf
+      (when-let [bytes (bbuf->bytes bbuf)]
+        (String. ^bytes bytes "UTF-8")))))
+
 (defn bbuf->input-stream
   [^ByteBuffer bbuf]
   (when bbuf
