@@ -239,9 +239,9 @@
       {(keyword payload-name) (condp = (:type body-shape)
                                 "blob"   (util/->input-stream body)
                                 "string" (util/->str body)
-                                (parse-fn body-shape (util/bbuf->str body)))})
+                                (parse-fn body-shape (util/->str body)))})
     ;; No payload
-    (let [body-str (util/bbuf->str body)]
+    (let [body-str (util/->str body)]
       (when-not (str/blank? body-str)
         (parse-fn output-shape body-str)))))
 

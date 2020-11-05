@@ -135,7 +135,7 @@
   (if (bytes? b)
     (io/input-stream b)
     (if (string? b)
-      (io/input-stream (.getBytes b "UTF-8"))
+      (io/input-stream (.getBytes ^String b "UTF-8"))
       (bbuf->input-stream b))))
 
 (defprotocol BBuffable
