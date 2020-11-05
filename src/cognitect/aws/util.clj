@@ -123,6 +123,13 @@
   (when bbuf
     (io/input-stream (bbuf->bytes bbuf))))
 
+(defn ->input-stream [b]
+  (if (bytes? b)
+    (io/input-stream b)
+    (if (string? b)
+      (io/input-stream (.getBytes b "UTF-8"))
+      (bbuf->input-stream b))))
+
 (defprotocol BBuffable
   (->bbuf [data]))
 

@@ -109,7 +109,7 @@
           (a/>! result-ch (with-meta
                             (handle-http-response service op-map response)
                             (swap! response-meta assoc
-                                   :http-response (update response :body util/bbuf->input-stream)))))
+                                   :http-response (update response :body util/->input-stream)))))
         (catch Throwable t
           (put-throwable result-ch t response-meta op-map))))
     result-ch))
