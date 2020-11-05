@@ -5,18 +5,15 @@
   "API functions for using a client to interact with AWS services."
   (:require [clojure.core.async :as a]
             [clojure.tools.logging :as log]
-            [clojure.string :as str]
             [cognitect.aws.client :as client]
             [cognitect.aws.retry :as retry]
             [cognitect.aws.client.shared :as shared]
-            [cognitect.aws.credentials :as credentials]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.http :as http]
             [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
             [cognitect.aws.client.api.async :as api.async]
-            [cognitect.aws.signers] ;; implements multimethods
-            [cognitect.aws.util :as util]))
+            [cognitect.aws.signers]))
 
 (declare ops)
 
@@ -63,7 +60,7 @@
   region-provider instances which use a small collection of daemon threads.
 
   Alpha. Subject to change."
-  [{:keys [api region region-provider retriable? backoff credentials-provider endpoint endpoint-override
+  [{:keys [api region region-provider retriable? backoff credentials-provider endpoint-override
            http-client service]
     :or   {endpoint-override {}}}]
   (when (string? endpoint-override)
@@ -100,11 +97,6 @@
       :region-provider      region-provider
       :credentials-provider credentials-provider
       :validate-requests?   (atom nil)})))
-
-(defn default-http-client
-  "Create an http-client to share across multiple aws-api clients."
-  []
-  (http/resolve-http-client nil))
 
 (defn invoke
   "Package and send a request to AWS and return the result.
@@ -164,61 +156,3 @@
        client/-get-info
        :service
        service/docs))
-
-#_(defn doc-str
-  "Given data produced by `ops`, returns a string
-  representation.
-
-  Alpha. Subject to change."
-  [{:keys [documentation documentationUrl request required response refs] :as doc}]
-  (when doc
-    (str/join "\n"
-              (cond-> ["-------------------------"
-                       (:name doc)
-                       ""
-                       documentation]
-                documentationUrl
-                (into [""
-                       documentationUrl])
-                request
-                (into [""
-                       "-------------------------"
-                       "Request"
-                       ""
-                       (with-out-str (pprint request))])
-                required
-                (into ["Required"
-                       ""
-                       (with-out-str (pprint required))])
-                response
-                (into ["-------------------------"
-                       "Response"
-                       ""
-                       (with-out-str (pprint response))])
-                refs
-                (into ["-------------------------"
-                       "Given"
-                       ""
-                       (with-out-str (pprint refs))])))))
-
-#_(defn doc
-  "Given a client and an operation (keyword), prints documentation
-  for that operation to the current value of *out*. Returns nil.
-
-  Alpha. Subject to change."
-  [client operation]
-  (println (or (some-> client ops operation doc-str)
-               (str "No docs for " (name operation)))))
-
-(defn stop
-  "Has no effect when the underlying http-client is the shared
-  instance.
-
-  If you explicitly provided any other instance of http-client, stops
-  it, releasing resources.
-
-  Alpha. Subject to change."
-  [aws-client]
-  (let [{:keys [http-client]} (client/-get-info aws-client)]
-    (when-not (#'shared/shared-http-client? http-client)
-      (http/stop http-client))))
