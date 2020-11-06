@@ -16,8 +16,8 @@
   AWS defines 8 primitive shapes: string, timestamp, boolean, blob, integer, long, double, and float
   and 3 composite shapes: structure, list, and map.
   "
-  (:refer-clojure :exclude [resolve])
   (:require [cheshire.core :as json]
+            [clojure.instant :as instant]
             [cognitect.aws.util :as util]))
 
 (set! *warn-on-reflection* true)
@@ -42,7 +42,7 @@
   (when-let [shape (resolve-shape shapes shape-ref)]
     (with-meta shape meta)))
 
-(defn resolve
+(defn resolve-share-ref
   "Resolve the shape reference."
   [shape shape-ref]
   (assert (:shapes (meta shape)))
@@ -51,22 +51,22 @@
 (defn key-shape
   "Resolve and return the maps' key shape."
   [shape]
-  (resolve shape (:key shape)))
+  (resolve-share-ref shape (:key shape)))
 
 (defn value-shape
   "Resolve and return the map's value shape."
   [shape]
-  (resolve shape (:value shape)))
+  (resolve-share-ref shape (:value shape)))
 
 (defn member-shape
   "Resolve and return the member shape."
   [shape k]
-  (resolve shape (get-in shape [:members k])))
+  (resolve-share-ref shape (get-in shape [:members k])))
 
 (defn list-member-shape
   "Resolve and return the list member shape."
   [shape]
-  (resolve shape (:member shape)))
+  (resolve-share-ref shape (:member shape)))
 
 (defn format-date
   ([shape data]
@@ -98,7 +98,7 @@
           (double? data)
           (java.util.Date. (* 1000 (long data)))
           (re-matches #"^\d+$" data)
-          (java.util.Date. (* 1000 (long (read-string data))))
+          (java.util.Date. (* 1000 (Long/parseLong data)))
           :else
           (parse-date* data
                        util/iso8601-date-format
@@ -177,7 +177,7 @@
 
 (defmethod json-serialize* "timestamp"
   [shape data]
-  (format-date shape data (comp read-string util/format-timestamp)))
+  (format-date shape data (comp #(Long/parseLong %) util/format-timestamp)))
 
 (defmethod json-serialize* "structure"
   [shape data]
