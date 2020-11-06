@@ -11,7 +11,8 @@
   [shape default]
   (or (:queryName shape)
       (when-let [name (:locationName shape)]
-        (apply str (Character/toUpperCase (first name)) (rest name)))
+        (let [c (first name)]
+          (apply str (Character/toUpperCase ^char c) (rest name))))
       default))
 
 (defmulti serialize
