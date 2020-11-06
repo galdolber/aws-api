@@ -63,16 +63,14 @@
                               api
                               (get-in service [:metadata :endpointPrefix])
                               endpoint-override)]
-    (client/->Client
-     (atom {})
-     {:service              service
-      :retriable?           (or retriable? retry/default-retriable?)
-      :backoff              (or backoff retry/default-backoff)
-      :http-client          http-client
-      :endpoint-provider    endpoint-provider
-      :region-provider      region-provider
-      :credentials-provider credentials-provider
-      :validate-requests?   (atom nil)})))
+    {:service              service
+     :retriable?           (or retriable? retry/default-retriable?)
+     :backoff              (or backoff retry/default-backoff)
+     :http-client          http-client
+     :endpoint-provider    endpoint-provider
+     :region-provider      region-provider
+     :credentials-provider credentials-provider
+     :validate-requests?   (atom nil)}))
 
 (defn invoke
   "Package and send a request to AWS and return the result.
@@ -91,7 +89,7 @@
 
   Alpha. Subject to change."
   [client op-map]
-  (let [{:keys [service retriable? backoff]} (client/-get-info client)]
+  (let [{:keys [service retriable? backoff]} client]
     (when-not (contains? (:operations service) (:op op-map))
       (throw (ex-info "Operation not supported" {:service   (keyword (service/service-name service))
                                                  :operation (:op op-map)})))

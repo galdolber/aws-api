@@ -11,17 +11,6 @@
 
 (set! *warn-on-reflection* true)
 
-(defprotocol ClientSPI
-  (-get-info [_] "Intended for internal use only"))
-
-(deftype Client [client-meta info]
-  clojure.lang.IObj
-  (meta [_] @client-meta)
-  (withMeta [this m] (swap! client-meta merge m) this)
-
-  ClientSPI
-  (-get-info [_] info))
-
 (defmulti build-http-request
   "AWS request -> HTTP request."
   (fn [service op-map]
@@ -71,8 +60,7 @@
 
   Alpha. Subject to change."
   [client op-map]
-  (let [{:keys [service http-client region-provider credentials-provider endpoint-provider]}
-        (-get-info client)
+  (let [{:keys [service http-client region-provider credentials-provider endpoint-provider]} client
         response-meta (atom {})
         region (region/fetch region-provider)
         creds (credentials/fetch credentials-provider)

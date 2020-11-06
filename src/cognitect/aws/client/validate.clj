@@ -10,27 +10,27 @@
 (defn ^:skip-wiki validate-requests?
   "For internal use. Don't call directly."
   [client]
-  (some-> client client/-get-info :validate-requests? deref))
+  (some-> client :validate-requests? deref))
 
 (defn ^:skip-wiki validate-requests
   "For internal use. Don't call directly."
   [client tf]
-  (reset! (-> client client/-get-info :validate-requests?) tf)
+  (reset! (-> client :validate-requests?) tf)
   (when tf
-    (service/load-specs (-> client client/-get-info :service)))
+    (service/load-specs (-> client :service)))
   tf)
 
 (defn ^:skip-wiki validate-requests?
   "For internal use. Don't call directly."
   [client]
-  (some-> client client/-get-info :validate-requests? deref))
+  (some-> client :validate-requests? deref))
 
 (defn ^:skip-wiki validate-requests
   "For internal use. Don't call directly."
   [client tf]
-  (reset! (-> client client/-get-info :validate-requests?) tf)
+  (reset! (-> client :validate-requests?) tf)
   (when tf
-    (service/load-specs (-> client client/-get-info :service)))
+    (service/load-specs (-> client :service)))
   tf)
 
 (def ^:private registry-ref (delay (dynaload/load-var 'clojure.spec.alpha/registry)))
@@ -62,11 +62,11 @@
 
   Alpha. Subject to change."
   [client op]
-  (service/request-spec-key (-> client client/-get-info :service) op))
+  (service/request-spec-key (-> client :service) op))
 
 (defn response-spec-key
   "Returns the key for the response spec for op.
 
   Alpha. Subject to change."
   [client op]
-  (service/response-spec-key (-> client client/-get-info :service) op))
+  (service/response-spec-key (-> client :service) op))

@@ -111,7 +111,6 @@
   Alpha. Subject to change."
   [client]
   (->> client
-       client/-get-info
        :service
        docs))
 
