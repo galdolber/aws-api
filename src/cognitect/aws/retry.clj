@@ -3,24 +3,6 @@
 
 (ns cognitect.aws.retry)
 
-(defn ^:skip-wiki with-retry
-  "For internal use. Do not call directly.
-
-  Calls req-fn, a *non-blocking* function that wraps some operation
-  and returns a channel. When the response to req-fn is retriable?
-  and backoff returns an int, waits backoff ms and retries, otherwise
-  puts response on resp-chan."
-  [req-fn retriable? backoff]
-  (loop [retries 0]
-    (let [resp (req-fn)]
-      (if (retriable? resp)
-        (if-let [bo (backoff retries)]
-          (do
-            (Thread/sleep bo)
-            (recur (inc retries)))
-          resp)
-        resp))))
-
 (defn capped-exponential-backoff
   "Returns a function of the num-retries (so far), which returns the
   lesser of max-backoff and an exponentially increasing multiple of
@@ -40,13 +22,20 @@
   Alpha. Subject to change."
   (capped-exponential-backoff 100 20000 3))
 
-(def default-retriable?
-  "A fn of http-response which returns true if http-response contains
-  a cognitect.anomalies/category of :cognitect.anomalies/busy or
-  :cognitect.anomalies/unavailable
+(defn ^:skip-wiki with-retry
+  "For internal use. Do not call directly.
 
-  Alpha. Subject to change."
-  (fn [http-response]
-    (contains? #{:cognitect.anomalies/busy
-                 :cognitect.anomalies/unavailable}
-               (:cognitect.anomalies/category http-response))))
+  Calls req-fn, a *non-blocking* function that wraps some operation
+  and returns a channel. When the response to req-fn is retriable?
+  and backoff returns an int, waits backoff ms and retries, otherwise
+  puts response on resp-chan."
+  [req-fn retriable? backoff]
+  (loop [retries 0]
+    (let [resp (req-fn)]
+      (if (retriable? resp)
+        (if-let [bo (backoff retries)]
+          (do
+            (Thread/sleep bo)
+            (recur (inc retries)))
+          resp)
+        resp))))

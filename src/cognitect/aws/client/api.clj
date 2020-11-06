@@ -4,7 +4,6 @@
 (ns cognitect.aws.client.api
   "API functions for using a client to interact with AWS services."
   (:require [cognitect.aws.client :as client]
-            [cognitect.aws.retry :as retry]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
@@ -40,20 +39,9 @@
                           Also supports a string representing just the hostname, though
                           support for a string is deprectated and may be removed in the
                           future.
-  :retriable?           - optional, fn of http-response (see cognitect.aws.http/submit).
-                          Should return a boolean telling the client whether or
-                          not the request is retriable.  The default,
-                          cognitect.aws.retry/default-retriable?, returns
-                          true when the response indicates that the service is
-                          busy or unavailable.
-  :backoff              - optional, fn of number of retries so far. Should return
-                          number of milliseconds to wait before the next retry
-                          (if the request is retriable?), or nil if it should stop.
-                          Defaults to cognitect.aws.retry/default-backoff.
 
   Alpha. Subject to change."
-  [{:keys [api region region-provider retriable? backoff credentials-provider endpoint-override
-           http-client service]
+  [{:keys [api region region-provider credentials-provider endpoint-override http-client service]
     :or   {endpoint-override {}}}]
   (let [region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
                                    region-provider region-provider
@@ -64,8 +52,6 @@
                               (get-in service [:metadata :endpointPrefix])
                               endpoint-override)]
     {:service              service
-     :retriable?           (or retriable? retry/default-retriable?)
-     :backoff              (or backoff retry/default-backoff)
      :http-client          http-client
      :endpoint-provider    endpoint-provider
      :region-provider      region-provider
@@ -79,21 +65,11 @@
 
   :op                   - required, keyword, the op to perform
   :request              - required only for ops that require them.
-  :retriable?           - optional, defaults to :retriable? on the client.
-                          See client.
-  :backoff              - optional, defaults to :backoff on the client.
-                          See client.
-
-  After invoking (cognitect.aws.client.api/validate-requests true), validates
-  :request in op-map.
 
   Alpha. Subject to change."
   [client op-map]
-  (let [{:keys [service retriable? backoff]} client]
+  (let [{:keys [service]} client]
     (when-not (contains? (:operations service) (:op op-map))
       (throw (ex-info "Operation not supported" {:service   (keyword (service/service-name service))
                                                  :operation (:op op-map)})))
-    (retry/with-retry
-      #(client/send-request client op-map)
-      (or (:retriable? op-map) retriable?)
-      (or (:backoff op-map) backoff))))
+    (client/send-request client op-map)))

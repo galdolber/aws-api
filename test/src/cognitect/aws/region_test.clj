@@ -2,7 +2,7 @@
 ;; All rights reserved.
 
 (ns cognitect.aws.region-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is run-tests use-fixtures testing]]
             [clojure.java.io :as io]
             [cognitect.aws.region :as region]
             [cognitect.aws.util :as u]
@@ -59,6 +59,4 @@
           (is (= 1 @fetch-counter))))))())
 
 (comment
-  (run-tests)
-
-  )
+  (run-tests))

@@ -5,8 +5,7 @@
   "Impl, don't call directly"
   (:require [clojure.string :as str]
             [cheshire.core :as json]
-            [cognitect.aws.util :as u]
-            [cognitect.aws.retry :as retry])
+            [cognitect.aws.util :as u])
   (:import (java.net URI)))
 
 (def ^:const ec2-metadata-service-override-system-property "com.amazonaws.sdk.ec2MetadataServiceEndpointOverride")
@@ -50,10 +49,7 @@
    :headers {:accept "*/*"}})
 
 (defn get-data [uri http-client]
-  (let [response (retry/with-retry
-                   #(http-client (request-map (URI. uri)))
-                   retry/default-retriable?
-                   retry/default-backoff)]
+  (let [response (http-client (request-map (URI. uri)))]
     ;; TODO: handle unhappy paths -JS
     (when (= 200 (:status response))
       (u/->str (:body response)))))

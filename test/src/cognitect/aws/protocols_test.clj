@@ -4,7 +4,7 @@
 (ns cognitect.aws.protocols-test
   "Test the protocols implementations."
   (:require [clojure.string :as str]
-            [clojure.test :refer :all]
+            [clojure.test :refer [deftest is run-tests use-fixtures testing]]
             [clojure.java.io :as io]
             [cheshire.core :as json]
             [clojure.spec.alpha :as s]
@@ -42,7 +42,7 @@
   (is (= expected uri)))
 
 (defn test-request-headers
-  [expected {:keys [headers] :as foo}]
+  [expected {:keys [headers]}]
   (doseq [[k v] expected
           :let [s (str/lower-case (name k))]]
     (is (contains? headers s))

@@ -1,5 +1,5 @@
 (ns cognitect.aws.protocols.rest-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is run-tests]]
             [cognitect.aws.protocols.rest :as protocols.rest]))
 
 (deftest test-serialize-url
@@ -21,6 +21,4 @@
                           (protocols.rest/serialize-uri "/{Bucket}/{Key+}" {:required ["Bucket" "Key"]} {:Bucket "foo"})))))
 
 (comment
-  (run-tests)
-
-  )
+  (run-tests))

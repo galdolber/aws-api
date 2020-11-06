@@ -2,7 +2,7 @@
 ;; All rights reserved.
 
 (ns cognitect.aws.ec2-metadata-utils-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is use-fixtures run-tests]]
             [org.httpkit.client :as http]
             [cognitect.aws.test.ec2-metadata-utils-server :as ec2-metadata-utils-server]
             [cognitect.aws.ec2-metadata-utils :as ec2-metadata-utils]))

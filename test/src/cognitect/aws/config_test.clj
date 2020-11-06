@@ -2,7 +2,7 @@
 ;; All rights reserved.
 
 (ns cognitect.aws.config-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is run-tests]]
             [clojure.java.io :as io]
             [cognitect.aws.config :as config]))
 
@@ -23,6 +23,4 @@
            (get-in config ["temp-credentials" "aws_session_token"])))))
 
 (comment
- (run-tests)
-
- )
+  (run-tests))

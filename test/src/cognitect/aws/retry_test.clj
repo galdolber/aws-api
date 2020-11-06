@@ -2,73 +2,78 @@
 ;; All rights reserved.
 
 (ns cognitect.aws.retry-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing run-tests]]
             [cognitect.aws.retry :as retry]))
 
-#_(deftest test-no-retry
-  (is (= {:this :map}
-         (let [c (a/chan 1)
-               _ (a/>!! c {:this :map})]
-           (retry/with-retry
-             (constantly c)
-             (constantly false)
-             (constantly nil))))))
+(defn default-retriable? [http-response]
+  (contains? #{:cognitect.anomalies/busy
+               :cognitect.anomalies/unavailable}
+             (:cognitect.anomalies/category http-response)))
 
-#_(deftest test-with-default-retry
+(deftest test-no-retry
+  (is (= {:this :map}
+         (retry/with-retry
+           (constantly {:this :map})
+           (constantly false)
+           (constantly nil)))))
+
+(deftest test-with-default-retry
   (testing "nil response from backoff"
     (is (= {:this :map}
-           (let [c (a/chan 1)
-                 _ (a/>!! c {:this :map})
-                 response-ch (retry/with-retry
-                               (constantly c)
-                               (a/promise-chan)
-                               (constantly true)
-                               (constantly nil))]
-             (a/<!! response-ch)))))
+           (retry/with-retry
+             (constantly {:this :map})
+             (constantly true)
+             (constantly nil)))))
   (testing "always busy"
     (let [max-retries 2]
       (is (= {:cognitect.anomalies/category :cognitect.anomalies/busy :test/attempt-number 3}
-             (let [c (a/chan 3)]
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/busy
-                         :test/attempt-number 1})
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/busy
-                         :test/attempt-number 2})
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/busy
-                         :test/attempt-number 3})
-               (a/<!! (retry/with-retry
-                        (constantly c)
-                        (a/promise-chan)
-                        retry/default-retriable?
-                        (retry/capped-exponential-backoff 50 500 max-retries))))))))
+             (let [pos (atom 0)
+                   ret [{:cognitect.anomalies/category :cognitect.anomalies/busy
+                         :test/attempt-number 1}
+                        {:cognitect.anomalies/category :cognitect.anomalies/busy
+                         :test/attempt-number 2}
+                        {:cognitect.anomalies/category :cognitect.anomalies/busy
+                         :test/attempt-number 3}]]
+               (retry/with-retry
+                 (fn []
+                   (let [r (nth ret @pos)]
+                     (swap! pos inc)
+                     r))
+                 default-retriable?
+                 (retry/capped-exponential-backoff 50 500 max-retries)))))))
   (testing "always unavailable"
     (let [max-retries 2]
       (is (= {:cognitect.anomalies/category :cognitect.anomalies/unavailable :test/attempt-number 3}
-             (let [c (a/chan 3)]
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/unavailable
-                         :test/attempt-number 1})
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/unavailable
-                         :test/attempt-number 2})
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/unavailable
-                         :test/attempt-number 3})
-               (a/<!! (retry/with-retry
-                        (constantly c)
-                        (a/promise-chan)
-                        retry/default-retriable?
-                        (retry/capped-exponential-backoff 50 500 max-retries))))))))
+             (let [pos (atom 0)
+                   ret [{:cognitect.anomalies/category :cognitect.anomalies/unavailable
+                         :test/attempt-number 1}
+                        {:cognitect.anomalies/category :cognitect.anomalies/unavailable
+                         :test/attempt-number 2}
+                        {:cognitect.anomalies/category :cognitect.anomalies/unavailable
+                         :test/attempt-number 3}]]
+               (retry/with-retry
+                 (fn []
+                   (let [r (nth ret @pos)]
+                     (swap! pos inc)
+                     r))
+                 default-retriable?
+                 (retry/capped-exponential-backoff 50 500 max-retries)))))))
   (testing "3rd time is the charm"
     (let [max-retries 3]
       (is (= {:test/attempt-number 3}
-             (let [c (a/chan 3)]
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/busy
-                         :test/attempt-number 1})
-               (a/>!! c {:cognitect.anomalies/category :cognitect.anomalies/busy
-                         :test/attempt-number 2})
-               (a/>!! c {:test/attempt-number 3})
-               (a/<!! (retry/with-retry
-                        (constantly c)
-                        (a/promise-chan)
-                        retry/default-retriable?
-                        (retry/capped-exponential-backoff 50 500 max-retries)))))))))
+             (let [pos (atom 0)
+                   ret [{:cognitect.anomalies/category :cognitect.anomalies/busy
+                         :test/attempt-number 1}
+                        {:cognitect.anomalies/category :cognitect.anomalies/busy
+                         :test/attempt-number 2}
+                        {:test/attempt-number 3}]]
+               (retry/with-retry
+                 (fn []
+                   (let [r (nth ret @pos)]
+                     (swap! pos inc)
+                     r))
+                 default-retriable?
+                 (retry/capped-exponential-backoff 50 500 max-retries))))))))
 
 (comment
   (run-tests)
