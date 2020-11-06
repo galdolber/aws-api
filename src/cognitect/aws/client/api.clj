@@ -8,20 +8,9 @@
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
-            [cognitect.aws.client.api.async :as api.async]
             [cognitect.aws.signers]
             [cognitect.aws.protocols.rest-json]
             [cognitect.aws.protocols.rest-xml]))
-
-(defn ops
-  "Returns a map of operation name to operation data for this client.
-
-  Alpha. Subject to change."
-  [client]
-  (->> client
-       client/-get-info
-       :service
-       service/docs))
 
 (defn client
   "Given a config map, create a client for specified api. Supported keys:
@@ -75,16 +64,7 @@
                               (get-in service [:metadata :endpointPrefix])
                               endpoint-override)]
     (client/->Client
-     (atom {'clojure.core.protocols/datafy
-            (fn [c]
-              (let [i (client/-get-info c)]
-                (-> i
-                    (select-keys [:service])
-                    (assoc :region (-> i :region-provider region/fetch)
-                           :endpoint (-> i :endpoint-provider endpoint/fetch))
-                    (update :endpoint select-keys [:hostname :protocols :signatureVersions])
-                    (update :service select-keys [:metadata])
-                    (assoc :ops (ops c)))))})
+     (atom {})
      {:service              service
       :retriable?           (or retriable? retry/default-retriable?)
       :backoff              (or backoff retry/default-backoff)
@@ -111,34 +91,11 @@
 
   Alpha. Subject to change."
   [client op-map]
-  (api.async/invoke client op-map))
-
-(defn validate-requests
-  "Given true, uses clojure.spec to validate all invoke calls on client.
-
-  Alpha. Subject to change."
-  ([client]
-   (validate-requests client true))
-  ([client bool]
-   (api.async/validate-requests client bool)))
-
-(defn request-spec-key
-  "Returns the key for the request spec for op.
-
-  Alpha. Subject to change."
-  [client op]
-  (service/request-spec-key (-> client client/-get-info :service) op))
-
-(defn response-spec-key
-  "Returns the key for the response spec for op.
-
-  Alpha. Subject to change."
-  [client op]
-  (service/response-spec-key (-> client client/-get-info :service) op))
-
-#_(def ^:private pprint-ref (delay #'println))
-#_(defn ^:skip-wiki pprint
-  "For internal use. Don't call directly."
-  [& args]
-  (binding [*print-namespace-maps* false]
-    (apply @pprint-ref args)))
+  (let [{:keys [service retriable? backoff]} (client/-get-info client)]
+    (when-not (contains? (:operations service) (:op op-map))
+      (throw (ex-info "Operation not supported" {:service   (keyword (service/service-name service))
+                                                 :operation (:op op-map)})))
+    (retry/with-retry
+      #(client/send-request client op-map)
+      (or (:retriable? op-map) retriable?)
+      (or (:backoff op-map) backoff))))

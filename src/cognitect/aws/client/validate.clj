@@ -1,11 +1,24 @@
 ;; Copyright (c) Cognitect, Inc.
 ;; All rights reserved.
 
-(ns cognitect.aws.client.api.validate
+(ns cognitect.aws.client.validate
   "API functions for using a client to interact with AWS services."
   (:require [cognitect.aws.client :as client]
             [cognitect.aws.service :as service]
             [cognitect.aws.dynaload :as dynaload]))
+
+(defn ^:skip-wiki validate-requests?
+  "For internal use. Don't call directly."
+  [client]
+  (some-> client client/-get-info :validate-requests? deref))
+
+(defn ^:skip-wiki validate-requests
+  "For internal use. Don't call directly."
+  [client tf]
+  (reset! (-> client client/-get-info :validate-requests?) tf)
+  (when tf
+    (service/load-specs (-> client client/-get-info :service)))
+  tf)
 
 (defn ^:skip-wiki validate-requests?
   "For internal use. Don't call directly."
@@ -43,3 +56,17 @@
       (when-not (valid? spec request)
         (assoc (explain-data spec request)
                :cognitect.anomalies/category :cognitect.anomalies/incorrect)))))
+
+(defn request-spec-key
+  "Returns the key for the request spec for op.
+
+  Alpha. Subject to change."
+  [client op]
+  (service/request-spec-key (-> client client/-get-info :service) op))
+
+(defn response-spec-key
+  "Returns the key for the response spec for op.
+
+  Alpha. Subject to change."
+  [client op]
+  (service/response-spec-key (-> client client/-get-info :service) op))
