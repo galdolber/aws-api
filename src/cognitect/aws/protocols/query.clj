@@ -4,7 +4,6 @@
 (ns ^:skip-wiki cognitect.aws.protocols.query
   "Impl, don't call directly."
   (:require [clojure.string :as str]
-            [cognitect.aws.client :as client]
             [cognitect.aws.service :as service]
             [cognitect.aws.shape :as shape]
             [cognitect.aws.util :as util]
@@ -96,8 +95,7 @@
      :body           (util/query-string
                       (serialize input-shape request params []))}))
 
-(defmethod client/build-http-request "query"
-  [service req-map]
+(defn build [service req-map]
   (build-query-http-request serialize service req-map))
 
 (defn build-query-http-response
@@ -111,6 +109,5 @@
           (util/xml->map (util/xml-read (util/bbuf->str body))))
         (common/xml-parse-error http-response)))))
 
-(defmethod client/parse-http-response "query"
-  [service op-map http-response]
+(defn parse [service op-map http-response]
   (build-query-http-response service op-map http-response))

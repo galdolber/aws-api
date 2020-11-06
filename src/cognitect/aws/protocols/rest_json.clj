@@ -5,7 +5,6 @@
   "Impl, don't call directly."
   (:require [clojure.string :as str]
             [cheshire.core :as json]
-            [cognitect.aws.client :as client]
             [cognitect.aws.shape :as shape]
             [cognitect.aws.util :as util]
             [cognitect.aws.protocols.common :as common]
@@ -28,8 +27,7 @@
   [_ shape data]
   (shape/format-date shape data))
 
-(defmethod client/build-http-request "rest-json"
-  [service op-map]
+(defn build [service op-map]
   (rest/build-http-request service
                            op-map
                            serialize))
@@ -56,8 +54,7 @@
              ;; needs a diff name?
              (shape/json-parse* shape))))))
 
-(defmethod client/parse-http-response "rest-json"
-  [service op-map http-response]
+(defn parse [service op-map http-response]
   (rest/parse-http-response service
                             op-map
                             http-response

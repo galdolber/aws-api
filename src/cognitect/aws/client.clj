@@ -7,19 +7,31 @@
             [cognitect.aws.interceptors :as interceptors]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.region :as region]
-            [cognitect.aws.credentials :as credentials]))
+            [cognitect.aws.credentials :as credentials]
+            [cognitect.aws.protocols.query :as query]
+            [cognitect.aws.protocols.json :as json]
+            [cognitect.aws.protocols.rest-json :as rest-json]
+            [cognitect.aws.protocols.rest-xml :as rest-xml]))
 
 (set! *warn-on-reflection* true)
 
-(defmulti build-http-request
-  "AWS request -> HTTP request."
-  (fn [service op-map]
-    (get-in service [:metadata :protocol])))
+(defn build-http-request [service op-map]
+  (let [protocol (get-in service [:metadata :protocol])]
+    (case protocol
+      "json" (json/build service op-map)
+      "rest-json" (rest-json/build service op-map)
+      "rest-xml" (rest-xml/build service op-map)
+      "query" (query/build service op-map)
+      (throw (ex-info "Protocol not supported" {:protocol protocol})))))
 
-(defmulti parse-http-response
-  "HTTP response -> AWS response"
-  (fn [service op-map http-response]
-    (get-in service [:metadata :protocol])))
+(defn parse-http-response [service op-map http-response]
+  (let [protocol (get-in service [:metadata :protocol])]
+    (case protocol
+      "json" (json/parse service op-map http-response)
+      "rest-json" (rest-json/parse service op-map http-response)
+      "rest-xml" (rest-xml/parse service op-map http-response)
+      "query" (query/parse service op-map http-response)
+      (throw (ex-info "Protocol not supported" {:protocol protocol})))))
 
 (defmulti sign-http-request
   "Sign the HTTP request."
@@ -66,14 +78,11 @@
         creds (credentials/fetch credentials-provider)
         endpoint (endpoint/fetch endpoint-provider region)]
     (try
-      (let [http-request
-            (sign-http-request
-             service endpoint
-             creds
-             (-> (build-http-request service op-map)
-                 (with-endpoint endpoint)
-                 (update :body util/->bbuf)
-                 ((partial interceptors/modify-http-request service op-map))))]
+      (let [http-request (-> (build-http-request service op-map)
+                             (with-endpoint endpoint)
+                             (update :body util/->bbuf)
+                             ((partial interceptors/modify-http-request service op-map)))
+            http-request (sign-http-request service endpoint creds http-request)]
         (swap! response-meta assoc :http-request http-request)
         (let [response (http-client http-request)]
           (with-meta

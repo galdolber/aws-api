@@ -4,7 +4,6 @@
 (ns ^:skip-wiki cognitect.aws.protocols.json
   "Impl, don't call directly."
   (:require [cognitect.aws.service :as service]
-            [cognitect.aws.client :as client]
             [cognitect.aws.util :as util]
             [cognitect.aws.shape :as shape]
             [cognitect.aws.protocols.common :as common]))
@@ -21,8 +20,7 @@
   (->> (util/with-defaults shape data)
        (shape/json-serialize shape)))
 
-(defmethod client/build-http-request "json"
-  [service {:keys [op request]}]
+(defn build [service {:keys [op request]}]
   (let [{:keys [jsonVersion targetPrefix]} (:metadata service)
         operation                          (get-in service [:operations op])
         input-shape                        (service/shape service (:input operation))]
@@ -33,15 +31,14 @@
      :headers        (common/headers service operation)
      :body           (serialize nil input-shape (or request {}))}))
 
-(defmethod client/parse-http-response "json"
-  [service {:keys [op] :as op-map} {:keys [status headers body] :as http-response}]
+(defn parse [service {:keys [op]} {:keys [status body] :as http-response}]
   (if (:cognitect.anomalies/category http-response)
     http-response
     (let [operation (get-in service [:operations op])
-          output-shape (service/shape service (:output operation))]
-      (let [body-str (util/bbuf->str body)]
-        (if (< status 400)
-          (if output-shape
-            (shape/json-parse output-shape body-str)
-            {})
-          (common/json-parse-error http-response))))))
+          output-shape (service/shape service (:output operation))
+          body-str (util/->str body)]
+      (if (< status 400)
+        (if output-shape
+          (shape/json-parse output-shape body-str)
+          {})
+        (common/json-parse-error http-response)))))
