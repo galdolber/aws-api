@@ -17,7 +17,7 @@
   and 3 composite shapes: structure, list, and map.
   "
   (:refer-clojure :exclude [resolve])
-  (:require [clojure.data.json :as json]
+  (:require [cheshire.core :as json]
             [cognitect.aws.util :as util]))
 
 (set! *warn-on-reflection* true)
@@ -205,12 +205,12 @@
 (defn json-parse
   "Parse the JSON string to return an instance of the shape."
   [shape s]
-  (json-parse* shape (json/read-str s :key-fn keyword)))
+  (json-parse* shape (json/parse-string s true)))
 
 (defn json-serialize
   "Serialize the shape's instance into a JSON string."
   [shape instance]
-  (json/write-str (json-serialize* shape instance)))
+  (json/generate-string (json-serialize* shape instance)))
 
 ;; ----------------------------------------------------------------------------------------
 ;; XML Parser & Serializer

@@ -5,7 +5,7 @@
   "Impl, don't call directly."
   (:require [clojure.string :as str]
             [clojure.data.xml :as xml]
-            [clojure.data.json :as json]
+            [cheshire.core :as json]
             [clojure.java.io :as io]
             [clojure.core.async :as a])
   (:import [java.text SimpleDateFormat]
@@ -226,7 +226,7 @@
   "Read readable as JSON. readable can be any valid input for
   clojure.java.io/reader."
   [readable]
-  (json/read-str (slurp readable) :key-fn keyword))
+  (json/parse-string (slurp readable) true))
 
 (defn map-vals
   "Apply f to the values with the given keys, or all values if `ks` is not specified."
@@ -256,14 +256,14 @@
   (io/input-stream (.decode (Base64/getDecoder) ^String s)))
 
 (defn encode-jsonvalue [data]
-  (base64-encode (.getBytes ^String (json/write-str data))))
+  (base64-encode (.getBytes ^String (json/generate-string data))))
 
 (defn parse-jsonvalue [data]
   (-> data
       base64-decode
       io/reader
       slurp
-      (json/read-str :key-fn keyword)))
+      (#(json/parse-string % true))))
 
 (def ^Charset UTF8 (Charset/forName "UTF-8"))
 

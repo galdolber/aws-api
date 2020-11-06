@@ -4,7 +4,7 @@
 (ns ^:skip-wiki cognitect.aws.ec2-metadata-utils
   "Impl, don't call directly"
   (:require [clojure.string :as str]
-            [clojure.data.json :as json]
+            [cheshire.core :as json]
             [clojure.core.async :as a]
             [cognitect.aws.util :as u]
             [cognitect.aws.retry :as retry])
@@ -72,7 +72,7 @@
 (defn get-ec2-instance-data [http-client]
   (some-> (build-path dynamic-data-root instance-identity-document)
           (get-data-at-path http-client)
-          (json/read-str :key-fn keyword)))
+          (#(json/parse-string % true))))
 
 (defn get-ec2-instance-region
   [http-client]
@@ -82,10 +82,10 @@
   (let [endpoint (or (when-let [path (u/getenv container-credentials-relative-uri-env-var)]
                        (str (get-host-address) path))
                      (u/getenv container-credentials-full-uri-env-var))]
-    (some-> endpoint (get-data http-client) (json/read-str :key-fn keyword))))
+    (some-> endpoint (get-data http-client) (#(json/parse-string % true)))))
 
 (defn instance-credentials [http-client]
   (when (not (in-container?))
     (when-let [cred-name (first (get-listing-at-path security-credentials-path http-client))]
       (some-> (get-data-at-path (str security-credentials-path cred-name) http-client)
-              (json/read-str :key-fn keyword)))))
+              (#(json/parse-string % true))))))

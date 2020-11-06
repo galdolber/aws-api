@@ -6,7 +6,7 @@
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
             [clojure.java.io :as io]
-            [clojure.data.json :as json]
+            [cheshire.core :as json]
             [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as stest]
             [cognitect.aws.util :as util]
@@ -334,8 +334,8 @@
 
 (defmethod test-request-body "json"
   [_ expected http-request]
-  (is (= (some-> expected json/read-str)
-         (some-> http-request :body json/read-str))))
+  (is (= (some-> expected json/parse-string)
+         (some-> http-request :body json/parse-string))))
 
 (defmethod test-request-body "rest-xml"
   [_ expected {:keys [body]}]
@@ -351,9 +351,9 @@
   (let [body-str (some-> http-request :body)]
     (if (str/blank? expected)
       (is (nil? body-str))
-      (if-let [expected-json (try (json/read-str expected)
+      (if-let [expected-json (try (json/parse-string expected)
                                   (catch Throwable t))]
-        (is (= expected-json (json/read-str body-str)))
+        (is (= expected-json (json/parse-string body-str)))
         ;; streaming, no JSON payload, we compare strings directly
         (is (= expected body-str))))))
 
@@ -421,9 +421,9 @@
   ([protocol input-or-output]
    (let [filepath       (str "botocore/protocols/" input-or-output "/" protocol ".json")
          extra-filepath (str "cognitect/protocols/" input-or-output "/" protocol ".json")]
-     (doseq [test (into (-> filepath io/resource slurp (json/read-str :key-fn keyword))
+     (doseq [test (into (-> filepath io/resource slurp (#(json/parse-string % true)))
                         (when (io/resource extra-filepath)
-                          (-> extra-filepath io/resource slurp (json/read-str :key-fn keyword))))]
+                          (-> extra-filepath io/resource slurp (#(json/parse-string % true)))))]
        (testing (str input-or-output " of " protocol " : " (:description test))
          (doseq [{:keys [given] :as test-case} (:cases test)
                  :let                          [service (assoc (select-keys test [:metadata :shapes])
