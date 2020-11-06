@@ -11,9 +11,19 @@
             [cognitect.aws.service :as service]
             [cognitect.aws.region :as region]
             [cognitect.aws.client.api.async :as api.async]
-            [cognitect.aws.signers]))
+            [cognitect.aws.signers]
+            [cognitect.aws.protocols.rest-json]
+            [cognitect.aws.protocols.rest-xml]))
 
-(declare ops)
+(defn ops
+  "Returns a map of operation name to operation data for this client.
+
+  Alpha. Subject to change."
+  [client]
+  (->> client
+       client/-get-info
+       :service
+       service/docs))
 
 (defn client
   "Given a config map, create a client for specified api. Supported keys:
@@ -138,13 +148,3 @@
   [& args]
   (binding [*print-namespace-maps* false]
     (apply @pprint-ref args)))
-
-(defn ops
-  "Returns a map of operation name to operation data for this client.
-
-  Alpha. Subject to change."
-  [client]
-  (->> client
-       client/-get-info
-       :service
-       service/docs))
