@@ -6,12 +6,10 @@
   (:refer-clojure :exclude [resolve])
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
+            [cheshire.core :as json]
             [cognitect.aws.util :as util]))
 
-(def endpoints
-  (read-string (slurp (io/resource "endpoints.edn"))))
-
-(defn set-endpoints [data] (reset! endpoints data))
+(def endpoints (json/parse-string (slurp (io/resource "endpoints.json")) true))
 
 (defn render-template
   [template args]
