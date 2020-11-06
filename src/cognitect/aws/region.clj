@@ -79,7 +79,8 @@
           (let [profile (get (config/parse f) profile-name)]
             (valid-region (get profile "region")))
           (catch Throwable t
-            (println t "Unable to fetch region from the AWS config file " (str f)))))))))
+            #_(println t "Unable to fetch region from the AWS config file " (str f))
+            nil)))))))
 
 (defn instance-region-provider
   "Returns the region from the ec2 instance's metadata service,

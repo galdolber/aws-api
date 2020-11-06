@@ -66,7 +66,8 @@
       (reset! credentials-atom new-creds))
     (catch Throwable t
       (reset! scheduled-refresh-atom nil)
-      (println t "Error fetching credentials."))))
+      #_(println t "Error fetching credentials.")
+      nil)))
 
 (defn cached-credentials-with-auto-refresh
   "Returns a CredentialsProvider which wraps `provider`, caching
@@ -120,7 +121,7 @@
             (some-> secret-access-key not-empty))
      credentials
      (when credential-source
-       (println (str "Unable to fetch credentials from " credential-source "."))
+       #_(println (str "Unable to fetch credentials from " credential-source "."))
        nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -235,7 +236,8 @@
                 :aws/session-token     (get profile "aws_session_token")}
                "aws profiles file"))
             (catch Throwable t
-              (println t "Error fetching credentials from aws profiles file")))))))))
+              #_(println t "Error fetching credentials from aws profiles file")
+              nil))))))))
 
 (defn calculate-ttl
   "Primarily for internal use, returns time to live (ttl, in seconds),
