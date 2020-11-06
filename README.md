@@ -26,6 +26,59 @@ client for a given service and `invoke`, which invokes an operation on
 the service. `invoke` takes a map and returns a map, and works the
 same way for every operation on every service.
 
+## Lite version
+
+Significant changes from aws-api:
+- service descriptor has to be provided (this allows to remove docs and unused functions to reduce the binary size)
+- remove all shared resources: http-client, credentials-provider and region-provider have to be provided
+- retry support is handled outside the invoke api (from the http-client you provide)
+- embed default endpoints
+- Remove all reflection
+- Replace json implementation with cheshire
+- Replace defmulti usage on cognitect.aws.client
+- Remove core.async dependency
+- Remove clojure.logging dependency
+- Extract doc and validate to different namespaces
+- Use patched data.xml that avoids reflection
+- Client is a simple map, no longer a deftype
+
+Sample:
+```
+(ns demo.core
+  (:require [cognitect.aws.client.api :as aws]
+            [cognitect.aws.credentials :as credentials]
+            [cognitect.aws.region :as region]
+            [org.httpkit.client :as http]
+            [cheshire.core :as json]))
+
+(set! *warn-on-reflection* true)
+
+(defn http-client [{:keys [uri scheme server-port server-name] :as req}]
+  @(http/request (assoc req :url (str (name scheme) "://" server-name ":" server-port uri))))
+
+(def credentials-provider (delay (credentials/default-credentials-provider http-client)))
+
+(def region-provider (delay (region/default-region-provider http-client)))
+
+;; This is only processe on compile time, the file is not needed on production
+;; Descriptor file from https://raw.githubusercontent.com/aws/aws-sdk-js/master/apis/lambda-2015-03-31.normal.json
+(def lambda-api (json/parse-string (slurp "lambda-2015-03-31.normal.json")))
+
+(def s3
+  (delay (aws/client
+          {:api :lambda
+           :http-client http-client
+           :service lambda-api
+           :credentials-provider @credentials-provider
+           :region-provider @region-provider})))
+
+(defn -main [& _]
+  (println (aws/invoke @s3 {:op :ListLayers})))
+```
+
+It's experimental, undocumented and not 100% compatible with aws-api, but it works, and you can check it out here:
+https://github.com/galdolber/aws-api-lite/
+
 ## Approach
 
 AWS APIs are described in data which specifies operations, inputs, and
