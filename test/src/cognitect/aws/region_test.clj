@@ -4,7 +4,6 @@
 (ns cognitect.aws.region-test
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
-            [clojure.core.async :as a]
             [cognitect.aws.region :as region]
             [cognitect.aws.util :as u]
             [cognitect.aws.test.utils :as tu]
@@ -54,8 +53,8 @@
               chans        (repeatedly num-requests
                                        #(do
                                           (swap! request-counter inc)
-                                          (region/fetch-async p)))]
-          (is (apply = "us-east-1" (map #(a/<!! %) chans)))
+                                          (region/fetch p)))]
+          (is (apply = "us-east-1" chans))
           (is (= num-requests @request-counter))
           (is (= 1 @fetch-counter))))))())
 

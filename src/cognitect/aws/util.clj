@@ -6,8 +6,7 @@
   (:require [clojure.string :as str]
             [clojure.data.xml :as xml]
             [cheshire.core :as json]
-            [clojure.java.io :as io]
-            [clojure.core.async :as a])
+            [clojure.java.io :as io])
   (:import [java.text SimpleDateFormat]
            [java.util Date TimeZone]
            [java.util UUID]
@@ -298,26 +297,6 @@
               m))
           (or data {})
           (:members shape)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; used to fetch creds and region
-
-(defn fetch-async
-  "Internal use. Do not call directly."
-  [fetch provider item]
-  (a/thread
-    (try
-      ;; lock on the provider to avoid redundant concurrent requests
-      ;; before the provider has a chance to cache the results of the
-      ;; first fetch.
-      (or (locking provider
-            (fetch provider))
-          {:cognitect.anomalies/category :cognitect.anomalies/fault
-           :cognitect.anomalies/message (format "Unable to fetch %s. See log for more details." item)})
-      (catch Throwable t
-        {:cognitect.anomalies/category :cognitect.anomalies/fault
-         ::throwable t
-         :cognitect.anomalies/message (format "Unable to fetch %s." item)}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Wrappers - here to support testing with-redefs since

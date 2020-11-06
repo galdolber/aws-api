@@ -5,7 +5,6 @@
   "Impl, don't call directly"
   (:require [clojure.string :as str]
             [cheshire.core :as json]
-            [clojure.core.async :as a]
             [cognitect.aws.util :as u]
             [cognitect.aws.retry :as retry])
   (:import (java.net URI)))
@@ -51,11 +50,10 @@
    :headers {:accept "*/*"}})
 
 (defn get-data [uri http-client]
-  (let [response (a/<!! (retry/with-retry
-                          #(http-client (request-map (URI. uri)))
-                          (a/promise-chan)
-                          retry/default-retriable?
-                          retry/default-backoff))]
+  (let [response (retry/with-retry
+                   #(http-client (request-map (URI. uri)))
+                   retry/default-retriable?
+                   retry/default-backoff)]
     ;; TODO: handle unhappy paths -JS
     (when (= 200 (:status response))
       (u/->str (:body response)))))

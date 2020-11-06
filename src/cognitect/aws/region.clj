@@ -5,8 +5,6 @@
   "Region providers. Primarily for internal use, and subject to change."
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
-            [clojure.core.async :as a]
             [cognitect.aws.util :as u]
             [cognitect.aws.config :as config]
             [cognitect.aws.ec2-metadata-utils :as ec2])
@@ -81,7 +79,7 @@
           (let [profile (get (config/parse f) profile-name)]
             (valid-region (get profile "region")))
           (catch Throwable t
-            (log/error t "Unable to fetch region from the AWS config file " (str f)))))))))
+            (println t "Unable to fetch region from the AWS config file " (str f)))))))))
 
 (defn instance-region-provider
   "Returns the region from the ec2 instance's metadata service,
@@ -110,11 +108,3 @@
     (system-property-region-provider)
     (profile-region-provider)
     (instance-region-provider http-client)]))
-
-(defn fetch-async
-  "Returns a channel that will produce the result of calling fetch on
-  the provider.
-
-  Alpha. Subject to change."
-  [provider]
-  (u/fetch-async fetch provider "region"))

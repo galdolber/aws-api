@@ -1,19 +1,15 @@
 (ns cognitect.aws.client-test
   (:require [clojure.test :as t :refer [deftest testing is]]
+            [cheshire.core :as json]
+            [clojure.java.io :as io]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.client :as client]
             [cognitect.aws.client.api.async :as api.async]
-            [cognitect.aws.http :as http]
             [cognitect.aws.region :as region]
-            [cognitect.aws.credentials :as creds]
-            [clojure.core.async :as a]))
+            [cognitect.aws.credentials :as creds]))
 
 (defn stub-http-client [result]
-  (reify http/HttpClient
-    (-submit [_ _ ch]
-      (a/go (a/>! ch result))
-      ch)
-    (-stop [_])))
+  (fn [_] result))
 
 (defn stub-credentials-provider [creds]
   (reify creds/CredentialsProvider
@@ -23,7 +19,8 @@
   (reify region/RegionProvider
     (fetch [_] region)))
 
-(def params {:api                  :s3
+(def params {:api :s3
+             :service (json/parse-string (slurp (io/file "dev-resources/s3-2006-03-01.normal.json")) true)
              ;; use an anomaly to bypass parsing http-response
              :http-client          (stub-http-client {:cognitect.anomalies/category :cognitect.aws/test
                                                       :cognitect.anomalies/message  "test"})
@@ -60,9 +57,10 @@
     (let [aws-client (aws/client (assoc params
                                         :credentials-provider
                                         (stub-credentials-provider nil)))]
+      (println ">>>" (pr-str (aws/invoke aws-client {:op :ListBuckets})))
       (is (re-find #"^Unable to fetch credentials"
-             (:cognitect.anomalies/message
-              (aws/invoke aws-client {:op :ListBuckets}))))))
+                   (:cognitect.anomalies/message
+                    (aws/invoke aws-client {:op :ListBuckets}))))))
   (testing "empty creds (regression test - should not hang)"
     (let [aws-client (aws/client (assoc params
                                         :credentials-provider

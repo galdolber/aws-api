@@ -6,15 +6,12 @@
 
   Alpha. Subject to change."
   (:require [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
-            [clojure.core.async :as a]
             [cognitect.aws.util :as u]
             [cognitect.aws.config :as config]
             [cognitect.aws.ec2-metadata-utils :as ec2])
-  (:import (java.util.concurrent Executors ExecutorService ScheduledExecutorService
+  (:import (java.util.concurrent Executors ScheduledExecutorService
                                  ScheduledFuture TimeUnit ThreadFactory)
            (java.io File)
-           (java.net URI)
            (java.time Duration Instant)))
 
 (defprotocol CredentialsProvider
@@ -69,7 +66,7 @@
       (reset! credentials-atom new-creds))
     (catch Throwable t
       (reset! scheduled-refresh-atom nil)
-      (log/error t "Error fetching credentials."))))
+      (println t "Error fetching credentials."))))
 
 (defn cached-credentials-with-auto-refresh
   "Returns a CredentialsProvider which wraps `provider`, caching
@@ -123,7 +120,7 @@
             (some-> secret-access-key not-empty))
      credentials
      (when credential-source
-       (log/info (str "Unable to fetch credentials from " credential-source "."))
+       (println (str "Unable to fetch credentials from " credential-source "."))
        nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -238,7 +235,7 @@
                 :aws/session-token     (get profile "aws_session_token")}
                "aws profiles file"))
             (catch Throwable t
-              (log/error t "Error fetching credentials from aws profiles file")))))))))
+              (println t "Error fetching credentials from aws profiles file")))))))))
 
 (defn calculate-ttl
   "Primarily for internal use, returns time to live (ttl, in seconds),
@@ -329,11 +326,3 @@
     (fetch [_]
       {:aws/access-key-id     access-key-id
        :aws/secret-access-key secret-access-key})))
-
-(defn fetch-async
-  "Returns a channel that will produce the result of calling fetch on
-  the provider.
-
-  Alpha. Subject to change."
-  [provider]
-  (u/fetch-async fetch provider "credentials"))

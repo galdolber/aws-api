@@ -3,9 +3,7 @@
 
 (ns cognitect.aws.client.api
   "API functions for using a client to interact with AWS services."
-  (:require [clojure.core.async :as a]
-            [clojure.tools.logging :as log]
-            [cognitect.aws.client :as client]
+  (:require [cognitect.aws.client :as client]
             [cognitect.aws.retry :as retry]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.service :as service]
@@ -113,7 +111,7 @@
 
   Alpha. Subject to change."
   [client op-map]
-  (a/<!! (api.async/invoke client op-map)))
+  (api.async/invoke client op-map))
 
 (defn validate-requests
   "Given true, uses clojure.spec to validate all invoke calls on client.

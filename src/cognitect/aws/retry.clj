@@ -1,8 +1,7 @@
 ;; Copyright (c) Cognitect, Inc.
 ;; All rights reserved.
 
-(ns cognitect.aws.retry
-  (:require [clojure.core.async :as a]))
+(ns cognitect.aws.retry)
 
 (defn ^:skip-wiki with-retry
   "For internal use. Do not call directly.
@@ -11,17 +10,16 @@
   and returns a channel. When the response to req-fn is retriable?
   and backoff returns an int, waits backoff ms and retries, otherwise
   puts response on resp-chan."
-  [req-fn resp-chan retriable? backoff]
-  (a/go-loop [retries 0]
-    (let [resp (a/<! (req-fn))]
+  [req-fn retriable? backoff]
+  (loop [retries 0]
+    (let [resp (req-fn)]
       (if (retriable? resp)
         (if-let [bo (backoff retries)]
           (do
-            (a/<! (a/timeout bo))
+            (Thread/sleep bo)
             (recur (inc retries)))
-          (a/>! resp-chan resp))
-        (a/>! resp-chan resp))))
-  resp-chan)
+          resp)
+        resp))))
 
 (defn capped-exponential-backoff
   "Returns a function of the num-retries (so far), which returns the
