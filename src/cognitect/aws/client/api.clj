@@ -68,11 +68,6 @@
   [{:keys [api region region-provider retriable? backoff credentials-provider endpoint-override
            http-client service]
     :or   {endpoint-override {}}}]
-  (when (string? endpoint-override)
-    (log/warn
-     (format
-      "DEPRECATION NOTICE: :endpoint-override string is deprecated.\nUse {:endpoint-override {:hostname \"%s\"}} instead."
-      endpoint-override)))
   (let [region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
                                    region-provider region-provider
                                    :else           (throw (ex-info "region or region-provider expected" {})))
@@ -82,15 +77,16 @@
                               (get-in service [:metadata :endpointPrefix])
                               endpoint-override)]
     (client/->Client
-     (atom {'clojure.core.protocols/datafy (fn [c]
-                                             (let [i (client/-get-info c)]
-                                               (-> i
-                                                   (select-keys [:service])
-                                                   (assoc :region (-> i :region-provider region/fetch)
-                                                          :endpoint (-> i :endpoint-provider endpoint/fetch))
-                                                   (update :endpoint select-keys [:hostname :protocols :signatureVersions])
-                                                   (update :service select-keys [:metadata])
-                                                   (assoc :ops (ops c)))))})
+     (atom {'clojure.core.protocols/datafy
+            (fn [c]
+              (let [i (client/-get-info c)]
+                (-> i
+                    (select-keys [:service])
+                    (assoc :region (-> i :region-provider region/fetch)
+                           :endpoint (-> i :endpoint-provider endpoint/fetch))
+                    (update :endpoint select-keys [:hostname :protocols :signatureVersions])
+                    (update :service select-keys [:metadata])
+                    (assoc :ops (ops c)))))})
      {:service              service
       :retriable?           (or retriable? retry/default-retriable?)
       :backoff              (or backoff retry/default-backoff)
