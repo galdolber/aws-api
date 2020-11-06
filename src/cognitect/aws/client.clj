@@ -11,7 +11,8 @@
             [cognitect.aws.protocols.query :as query]
             [cognitect.aws.protocols.json :as json]
             [cognitect.aws.protocols.rest-json :as rest-json]
-            [cognitect.aws.protocols.rest-xml :as rest-xml]))
+            [cognitect.aws.protocols.rest-xml :as rest-xml]
+            [cognitect.aws.protocols.ec2 :as ec2]))
 
 (set! *warn-on-reflection* true)
 
@@ -22,6 +23,7 @@
       "rest-json" (rest-json/build service op-map)
       "rest-xml" (rest-xml/build service op-map)
       "query" (query/build service op-map)
+      "ec2" (ec2/build service op-map)
       (throw (ex-info "Protocol not supported" {:protocol protocol})))))
 
 (defn parse-http-response [service op-map http-response]
@@ -31,6 +33,7 @@
       "rest-json" (rest-json/parse service op-map http-response)
       "rest-xml" (rest-xml/parse service op-map http-response)
       "query" (query/parse service op-map http-response)
+      "ec2" (ec2/parse service op-map http-response)
       (throw (ex-info "Protocol not supported" {:protocol protocol})))))
 
 (defmulti sign-http-request

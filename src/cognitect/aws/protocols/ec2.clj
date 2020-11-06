@@ -3,12 +3,8 @@
 
 (ns ^:skip-wiki cognitect.aws.protocols.ec2
   "Impl, don't call directly."
-  (:require [clojure.string :as str]
-            [cognitect.aws.util :as util]
-            [cognitect.aws.client :as client]
-            [cognitect.aws.service :as service]
+  (:require [cognitect.aws.util :as util]
             [cognitect.aws.shape :as shape]
-            [cognitect.aws.protocols.common :as common]
             [cognitect.aws.protocols.query :as query]))
 
 (defn serialized-name
@@ -45,10 +41,8 @@
             serialized
             (map-indexed (fn [i member] [(inc i) member]) args))))
 
-(defmethod client/build-http-request "ec2"
-  [service op-map]
+(defn build [service op-map]
   (query/build-query-http-request serialize service op-map))
 
-(defmethod client/parse-http-response "ec2"
-  [service {:keys [op] :as op-map} {:keys [status body] :as http-response}]
+(defn parse [service op-map http-response]
   (query/build-query-http-response service op-map http-response))
