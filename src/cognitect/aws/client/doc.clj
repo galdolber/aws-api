@@ -2,7 +2,6 @@
   (:require [clojure.string :as str]
             [cognitect.aws.dynaload :as dynaload]
             [cognitect.aws.service :refer [ns-prefix service-name base-resource-path]]
-            [cognitect.aws.client :as client]
             [clojure.walk :as walk]
             [clojure.edn :as edn]
             [clojure.java.io :as io]))

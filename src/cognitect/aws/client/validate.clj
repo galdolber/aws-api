@@ -3,10 +3,23 @@
 
 (ns cognitect.aws.client.validate
   "API functions for using a client to interact with AWS services."
-  (:require [cognitect.aws.client :as client]
-            [cognitect.aws.service :as service]
+  (:require [cognitect.aws.client.doc :as doc]
             [cognitect.aws.dynaload :as dynaload]))
 
+(defn request-spec-key
+  "Returns the key for the request spec for op.
+
+  Alpha. Subject to change."
+  [client op]
+  (doc/request-spec-key (-> client :service) op))
+
+(defn response-spec-key
+  "Returns the key for the response spec for op.
+
+  Alpha. Subject to change."
+  [client op]
+  (doc/response-spec-key (-> client :service) op))
+
 (defn ^:skip-wiki validate-requests?
   "For internal use. Don't call directly."
   [client]
@@ -17,20 +30,7 @@
   [client tf]
   (reset! (-> client :validate-requests?) tf)
   (when tf
-    (service/load-specs (-> client :service)))
-  tf)
-
-(defn ^:skip-wiki validate-requests?
-  "For internal use. Don't call directly."
-  [client]
-  (some-> client :validate-requests? deref))
-
-(defn ^:skip-wiki validate-requests
-  "For internal use. Don't call directly."
-  [client tf]
-  (reset! (-> client :validate-requests?) tf)
-  (when tf
-    (service/load-specs (-> client :service)))
+    (doc/load-specs (-> client :service)))
   tf)
 
 (def ^:private registry-ref (delay (dynaload/load-var 'clojure.spec.alpha/registry)))
@@ -51,22 +51,8 @@
 (defn ^:skip-wiki validate
   "For internal use. Don't call directly."
   [service {:keys [op request] :or {request {}}}]
-  (let [spec (service/request-spec-key service op)]
+  (let [spec (doc/request-spec-key service op)]
     (when (contains? (-> (registry) keys set) spec)
       (when-not (valid? spec request)
         (assoc (explain-data spec request)
                :cognitect.anomalies/category :cognitect.anomalies/incorrect)))))
-
-(defn request-spec-key
-  "Returns the key for the request spec for op.
-
-  Alpha. Subject to change."
-  [client op]
-  (service/request-spec-key (-> client :service) op))
-
-(defn response-spec-key
-  "Returns the key for the response spec for op.
-
-  Alpha. Subject to change."
-  [client op]
-  (service/response-spec-key (-> client :service) op))

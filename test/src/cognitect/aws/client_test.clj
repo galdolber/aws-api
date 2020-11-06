@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.client :as client]
-            [cognitect.aws.client.api.async :as api.async]
+            [cognitect.aws.client.validate :as validate]
             [cognitect.aws.region :as region]
             [cognitect.aws.credentials :as creds]))
 
@@ -85,8 +85,8 @@
 
 (deftest validate-requests?
   (let [aws-client (aws/client params)]
-    (is (not (api.async/validate-requests? aws-client)))
-    (api.async/validate-requests aws-client true)
-    (is (api.async/validate-requests? aws-client))
-    (api.async/validate-requests aws-client false)
-    (is (not (api.async/validate-requests? aws-client)))))
+    (is (not (validate/validate-requests? aws-client)))
+    (validate/validate-requests aws-client true)
+    (is (validate/validate-requests? aws-client))
+    (validate/validate-requests aws-client false)
+    (is (not (validate/validate-requests? aws-client)))))
