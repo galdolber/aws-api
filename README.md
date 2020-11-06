@@ -70,20 +70,17 @@ of your choice, e.g. `com.cognitect.aws/s3`.
 To use, for example, the s3 api, add the following to deps.edn
 
 ``` clojure
-{:deps {com.cognitect.aws/api       {:mvn/version "0.8.474"}
-        com.cognitect.aws/endpoints {:mvn/version "1.1.11.893"}
-        com.cognitect.aws/s3        {:mvn/version "809.2.784.0"}}}
+{:deps {com.cognitect.aws/api       {:git/url "git@github.com:galdolber/aws-api-lite.git"
+                                     :sha "{sha}"}}}
 ```
-
-* See [latest releases](latest-releases.edn) for a list of the latest releases of
-`api`, `endpoints`, and all supported services.
 
 ### explore!
 
 Fire up a repl using that deps.edn, and then you can do things like this:
 
 ``` clojure
-(require '[cognitect.aws.client.api :as aws])
+(require '[cognitect.aws.client.api :as aws]
+         '[cognitect.aws.client.doc :as doc])
 ```
 
 Create a client:
@@ -95,19 +92,19 @@ Create a client:
 Ask what ops your client can perform:
 
 ``` clojure
-(aws/ops s3)
+(doc/ops s3)
 ```
 
 Look up docs for an operation:
 
 ``` clojure
-(aws/doc s3 :CreateBucket)
+(doc/doc s3 :CreateBucket)
 ```
 
 Tell the client to let you know when you get the args wrong:
 
 ``` clojure
-(aws/validate-requests s3 true)
+(doc/validate-requests s3 true)
 ```
 
 Do stuff:
