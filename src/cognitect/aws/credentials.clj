@@ -248,10 +248,10 @@
   `:Expiration` can be a java.util.Date, or a string parsable
   by java.time.Instant/parse (returned by ec2/ecs instance credentials)
   or a java.util.Date (returned from :AssumeRole on aws sts client)."
-  [{:keys [Expiration] :as credentials}]
+  [{:keys [Expiration]}]
   (if Expiration
     (let [expiration (if (inst? Expiration)
-                       (.toInstant Expiration)
+                       (.toInstant ^java.util.Date Expiration)
                        (Instant/parse Expiration))]
       (max (- (.getSeconds (Duration/between (Instant/now) ^Instant expiration)) 300)
            60))
