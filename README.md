@@ -64,7 +64,7 @@ Sample:
 ;; Descriptor file from https://raw.githubusercontent.com/aws/aws-sdk-js/master/apis/lambda-2015-03-31.normal.json
 (def lambda-api (json/parse-string (slurp "lambda-2015-03-31.normal.json")))
 
-(def s3
+(def lambda
   (delay (aws/client
           {:api :lambda
            :http-client http-client
@@ -73,7 +73,7 @@ Sample:
            :region-provider @region-provider})))
 
 (defn -main [& _]
-  (println (aws/invoke @s3 {:op :ListLayers})))
+  (println (aws/invoke @lambda {:op :ListLayers})))
 ```
 
 It's experimental, undocumented and not 100% compatible with aws-api, but it works, and you can check it out here:
