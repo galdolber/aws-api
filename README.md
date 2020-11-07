@@ -43,7 +43,7 @@ Significant changes from aws-api:
 - Client is a simple map, no longer a deftype
 
 Sample:
-```
+``` clojure
 (ns demo.core
   (:require [cognitect.aws.client.api :as aws]
             [cognitect.aws.credentials :as credentials]
