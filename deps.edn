@@ -2,7 +2,7 @@
 ;; All rights reserved.
 
 {:paths   ["src" "resources"]
- :deps    {org.clojure/clojure {:mvn/version "1.10.1"}
+ :deps    {org.clojure/clojure {:mvn/version "1.10.2"}
            cheshire/cheshire {:mvn/version "5.10.0"}
            galdolber/data.xml
            {:git/url "git@github.com:galdolber/data.xml.git"
