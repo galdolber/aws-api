@@ -6,6 +6,7 @@
   (:require [cognitect.aws.client :as client]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.service :as service]
+            [cognitect.aws.credentials :as credentials]
             [cognitect.aws.region :as region]
             [cognitect.aws.signers]
             [cognitect.aws.protocols.rest-json]
@@ -51,12 +52,16 @@
                               api
                               (get-in service [:metadata :endpointPrefix])
                               endpoint-override)]
-    {:service              service
-     :http-client          http-client
-     :endpoint-provider    endpoint-provider
-     :region-provider      region-provider
-     :credentials-provider credentials-provider
-     :validate-requests?   (atom nil)}))
+    {:service service
+     :http-client http-client
+     :endpoint-provider endpoint-provider
+     :region-provider
+     (or region-provider
+         (region/default-region-provider http-client))
+     :credentials-provider
+     (or credentials-provider
+         (credentials/default-credentials-provider http-client))
+     :validate-requests? (atom nil)}))
 
 (defn invoke
   "Package and send a request to AWS and return the result.
