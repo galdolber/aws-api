@@ -44,23 +44,24 @@
   Alpha. Subject to change."
   [{:keys [api region region-provider credentials-provider endpoint-override http-client service]
     :or   {endpoint-override {}}}]
-  (let [region-provider      (cond region          (reify region/RegionProvider (fetch [_] region))
-                                   region-provider region-provider
-                                   :else           (throw (ex-info "region or region-provider expected" {})))
-        credentials-provider (or credentials-provider (throw (ex-info "credentials-provider expected" {})))
-        endpoint-provider    (endpoint/default-endpoint-provider
-                              api
-                              (get-in service [:metadata :endpointPrefix])
-                              endpoint-override)]
+  (let [region-provider
+        (cond region          (reify region/RegionProvider (fetch [_] region))
+              region-provider region-provider
+              :else
+              (region/default-region-provider http-client))
+        credentials-provider
+        (or credentials-provider
+            (credentials/default-credentials-provider http-client))
+        endpoint-provider
+        (endpoint/default-endpoint-provider
+         api
+         (get-in service [:metadata :endpointPrefix])
+         endpoint-override)]
     {:service service
      :http-client http-client
      :endpoint-provider endpoint-provider
-     :region-provider
-     (or region-provider
-         (region/default-region-provider http-client))
-     :credentials-provider
-     (or credentials-provider
-         (credentials/default-credentials-provider http-client))
+     :region-provider region-provider
+     :credentials-provider credentials-provider
      :validate-requests? (atom nil)}))
 
 (defn invoke
