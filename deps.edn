@@ -2,11 +2,11 @@
 ;; All rights reserved.
 
 {:paths   ["src" "resources"]
- :deps    {org.clojure/clojure {:mvn/version "1.10.2"}
+ :deps    {org.clojure/clojure {:mvn/version "1.10.3"}
            cheshire/cheshire {:mvn/version "5.10.0"}
            galdolber/data.xml
            {:git/url "git@github.com:galdolber/data.xml.git"
-            :sha "59e128226f765bc1c962dd80815f0f2795dc3da2"}}
+            :sha "e0536ef4e10865b74a67f757105f9c540330c810"}}
  :aliases {:update-versions {:extra-paths ["build/src"]
                              :main-opts   ["-m" "cognitect.aws.version-updater"]}
            :dev             {:extra-paths ["dev/src" "dev/resources" "test/src" "test/resources"]
