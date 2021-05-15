@@ -39,4 +39,4 @@
 
 (defn json-parse-error
   [{:keys [body] :as http-response}]
-  (parse-error* http-response (some-> body util/->str #(json/parse-string % true))))
+  (parse-error* http-response (json/parse-string (some-> body util/->str) true)))
