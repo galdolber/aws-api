@@ -133,11 +133,13 @@
     (io/input-stream (bbuf->bytes bbuf))))
 
 (defn ->input-stream [b]
-  (if (bytes? b)
-    (io/input-stream b)
-    (if (string? b)
-      (io/input-stream (.getBytes ^String b "UTF-8"))
-      (bbuf->input-stream b))))
+  (if (instance? java.io.InputStream b)
+    b
+    (if (bytes? b)
+      (io/input-stream b)
+      (if (string? b)
+        (io/input-stream (.getBytes ^String b "UTF-8"))
+        (bbuf->input-stream b)))))
 
 (defprotocol BBuffable
   (->bbuf [data]))
@@ -167,18 +169,21 @@
 
 (defn xml->map [element]
   (cond
-    (nil? element)        nil
-    (string? element)     element
-    (sequential? element) (if (> (count element) 1)
-                            (into {} (map xml->map) element)
-                            (xml->map (first element)))
+    (nil? element) nil
+    (string? element) element
+    (sequential? element)
+    (if (> (count element) 1)
+      (into {} (map xml->map) element)
+      (xml->map (first element)))
     (map? element)
     (cond
       (empty? element) {}
-      (:attrs element) {(:tag element)                                (xml->map (:content element))
-                        (keyword (str (name (:tag element)) "Attrs")) (:attrs element)}
-      :else            {(:tag element) (xml->map  (:content element))})
-    :else                 nil))
+      (:attrs element)
+      {(:tag element)
+       (xml->map (:content element))
+       (keyword (str (name (:tag element)) "Attrs")) (:attrs element)}
+      :else {(:tag element) (xml->map  (:content element))})
+    :else nil))
 
 (defn error-code [response-body]
   (let [error (some->> (tree-seq coll? #(if (map? %) (vals %) %) response-body)
