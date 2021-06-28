@@ -33,7 +33,7 @@
 
 (use-fixtures :once test-server)
 
-(deftest returns-nil-after-retries
+#_(deftest returns-nil-after-retries
   (is (nil? (ec2-metadata-utils/get-ec2-instance-region *http-client*))))
 
 (comment

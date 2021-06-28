@@ -8,7 +8,8 @@
             [cognitect.aws.service :as service]
             [cognitect.aws.credentials :as credentials]
             [cognitect.aws.region :as region]
-            [cognitect.aws.signers]
+            [cognitect.aws.signing]
+            [cognitect.aws.signing.impl]
             [cognitect.aws.protocols.rest-json]
             [cognitect.aws.protocols.rest-xml]))
 
