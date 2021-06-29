@@ -6,7 +6,6 @@
   (:require [cognitect.aws.util :as util]
             [cognitect.aws.interceptors :as interceptors]
             [cognitect.aws.endpoint :as endpoint]
-            [cognitect.aws.signing :as signing]
             [cognitect.aws.region :as region]
             [cognitect.aws.credentials :as credentials]
             [cognitect.aws.protocols.query :as query]
@@ -36,6 +35,11 @@
       "query" (query/parse service op-map http-response)
       "ec2" (ec2/parse service op-map http-response)
       (throw (ex-info "Protocol not supported" {:protocol protocol})))))
+
+(defmulti sign-http-request
+  "Sign the HTTP request."
+  (fn [service endpoint credentials http-request]
+    (get-in service [:metadata :signatureVersion])))
 
 ;; TODO convey throwable back from impl
 (defn ^:private handle-http-response
@@ -80,21 +84,13 @@
       (let [http-request (-> (build-http-request service op-map)
                              (with-endpoint endpoint)
                              (update :body util/->bbuf)
-                             ((partial interceptors/modify-http-request service op-map)))]
-        (if-let [presigned-url (:presigned-url op-map)]
-          (signing/presigned-url
-           {:http-request  http-request
-            :op            (:op op-map)
-            :presigned-url presigned-url
-            :service       service
-            :endpoint      endpoint
-            :credentials   creds})
-          (let [http-request (signing/sign-http-request service endpoint creds http-request)]
-            (swap! response-meta assoc :http-request http-request)
-            (let [response (http-client http-request)]
-              (with-meta
-                (handle-http-response service op-map response)
-                (swap! response-meta assoc
-                       :http-response (update response :body util/->input-stream)))))))
+                             ((partial interceptors/modify-http-request service op-map)))
+            http-request (sign-http-request service endpoint creds http-request)]
+        (swap! response-meta assoc :http-request http-request)
+        (let [response (http-client http-request)]
+          (with-meta
+            (handle-http-response service op-map response)
+            (swap! response-meta assoc
+                   :http-response (update response :body util/->input-stream)))))
       (catch Throwable t
         (build-throwable t response-meta op-map)))))

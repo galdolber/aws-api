@@ -57,9 +57,10 @@
     (let [aws-client (aws/client (assoc params
                                         :credentials-provider
                                         (stub-credentials-provider nil)))]
-      (is (= "test"
-             (:cognitect.anomalies/message
-              (aws/invoke aws-client {:op :ListBuckets}))))))
+      (println ">>>" (pr-str (aws/invoke aws-client {:op :ListBuckets})))
+      (is (re-find #"^Unable to fetch credentials"
+                   (:cognitect.anomalies/message
+                    (aws/invoke aws-client {:op :ListBuckets}))))))
   (testing "empty creds (regression test - should not hang)"
     (let [aws-client (aws/client (assoc params
                                         :credentials-provider
@@ -67,18 +68,17 @@
       (is (= "test"
              (:cognitect.anomalies/message
               (aws/invoke aws-client {:op :ListBuckets}))))))
-  #_(testing "nil region (regression test - should not hang)"
+  (testing "nil region (regression test - should not hang)"
     (let [aws-client (aws/client (assoc params
                                         :region-provider
                                         (stub-region-provider nil)))]
       (is (re-find #"^Unable to fetch region"
                    (:cognitect.anomalies/message
                     (aws/invoke aws-client {:op :ListBuckets}))))))
-  #_(testing "empty region (regression test - should not hang)"
+  (testing "empty region (regression test - should not hang)"
     (let [aws-client (aws/client (assoc params
                                         :region-provider
                                         (stub-region-provider "")))]
-      (println (aws/invoke aws-client {:op :ListBuckets}))
       (is (re-find #"^No known endpoint."
                    (:cognitect.anomalies/message
                     (aws/invoke aws-client {:op :ListBuckets})))))))
