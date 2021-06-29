@@ -23,10 +23,6 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
-      - uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@3.5
         with:
