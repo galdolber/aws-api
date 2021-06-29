@@ -136,10 +136,7 @@
 
 (defn v4-sign-http-request
   [service endpoint credentials http-request & {:keys [content-sha256-header?]}]
-  (let [content-sha256-header?
-        (and content-sha256-header?
-             (:body http-request)
-             (not (get-in http-request [:headers "x-amz-content-sha256"])))
+  (let [
         {:keys [:aws/access-key-id :aws/secret-access-key :aws/session-token]} credentials
         auth-info      {:access-key-id     access-key-id
                         :secret-access-key secret-access-key
@@ -148,8 +145,13 @@
                         :region            (or (get-in endpoint [:credentialScope :region])
                                                (:region endpoint))}
         req (cond-> http-request
-              session-token          (assoc-in [:headers "x-amz-security-token"] session-token)
-              content-sha256-header? (assoc-in [:headers "x-amz-content-sha256"] (hashed-body http-request)))]
+              session-token
+              (assoc-in [:headers "x-amz-security-token"] session-token)
+              content-sha256-header?
+              (assoc-in [:headers "x-amz-content-sha256"]
+                        (or
+                         (not (get-in http-request [:headers "x-amz-content-sha256"]))
+                         (hashed-body http-request))))]
     (assoc-in req
               [:headers "authorization"]
               (format "AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s"
