@@ -150,7 +150,7 @@
               content-sha256-header?
               (assoc-in [:headers "x-amz-content-sha256"]
                         (or
-                         (not (get-in http-request [:headers "x-amz-content-sha256"]))
+                         (get-in http-request [:headers "x-amz-content-sha256"])
                          (hashed-body http-request))))]
     (assoc-in req
               [:headers "authorization"]
