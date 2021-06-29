@@ -75,7 +75,9 @@
 
   Alpha. Subject to change."
   [client op-map]
-  (let [{:keys [service http-client region-provider credentials-provider endpoint-provider]} client
+  (let [{:keys [service http-client region-provider
+                credentials-provider endpoint-provider]} client
+        presigned-url (:presigned-url op-map)
         response-meta (atom {})
         region (region/fetch region-provider)
         creds (credentials/fetch credentials-provider)
@@ -85,12 +87,21 @@
                              (with-endpoint endpoint)
                              (update :body util/->bbuf)
                              ((partial interceptors/modify-http-request service op-map)))
+            http-request (if presigned-url
+                           (-> http-request
+                               (assoc-in [:headers "X-Amz-Expires"]
+                                         (str (:expires presigned-url)))
+                               (assoc-in [:headers "x-amz-content-sha256"]
+                                     (str (:body-sha256 presigned-url))))
+                           http-request)
             http-request (sign-http-request service endpoint creds http-request)]
         (swap! response-meta assoc :http-request http-request)
-        (let [response (http-client http-request)]
-          (with-meta
-            (handle-http-response service op-map response)
-            (swap! response-meta assoc
-                   :http-response (update response :body util/->input-stream)))))
+        (if presigned-url
+          http-request
+          (let [response (http-client http-request)]
+            (with-meta
+              (handle-http-response service op-map response)
+              (swap! response-meta assoc
+                     :http-response (update response :body util/->input-stream))))))
       (catch Throwable t
         (build-throwable t response-meta op-map)))))

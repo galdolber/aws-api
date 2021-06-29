@@ -136,7 +136,11 @@
 
 (defn v4-sign-http-request
   [service endpoint credentials http-request & {:keys [content-sha256-header?]}]
-  (let [{:keys [:aws/access-key-id :aws/secret-access-key :aws/session-token]} credentials
+  (let [content-sha256-header?
+        (and content-sha256-header?
+             (:body http-request)
+             (not (get-in http-request [:headers "x-amz-content-sha256"])))
+        {:keys [:aws/access-key-id :aws/secret-access-key :aws/session-token]} credentials
         auth-info      {:access-key-id     access-key-id
                         :secret-access-key secret-access-key
                         :service           (or (service/signing-name service)
