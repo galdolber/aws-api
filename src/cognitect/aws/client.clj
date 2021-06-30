@@ -3,7 +3,8 @@
 
 (ns ^:skip-wiki cognitect.aws.client
   "Impl, don't call directly."
-  (:require [cognitect.aws.util :as util]
+  (:require [clojure.string :as string]
+            [cognitect.aws.util :as util]
             [cognitect.aws.interceptors :as interceptors]
             [cognitect.aws.endpoint :as endpoint]
             [cognitect.aws.region :as region]
@@ -52,16 +53,26 @@
       {:cognitect.anomalies/category :cognitect.anomalies/fault
        ::throwable t})))
 
-(defn ^:private with-endpoint [req {:keys [protocol
-                                           hostname
-                                           port
-                                           path]}]
-  (cond-> (-> req
-              (assoc-in [:headers "host"] hostname)
-              (assoc :server-name hostname))
-    protocol (assoc :scheme protocol)
-    port     (assoc :server-port port)
-    path     (assoc :uri path)))
+(defn ^:private with-endpoint
+  [req {:keys [protocol hostname port path]} service
+   {:keys [accelerate? dualstack?]}]
+  (let [[hostname path]
+        (if (and accelerate? (= "S3" (:serviceId (:metadata service))))
+          (let [uri (subs (:uri req) 1)
+                i (string/index-of uri "/")
+                bucket (subs uri 0 i)
+                uri (str "/" (subs uri (inc i)))]
+            [(str bucket "." (string/replace hostname #"s3\."
+                                             (if dualstack?
+                                               "s3-accelerate.dualstack."
+                                               "s3-accelerate."))) uri])
+          [hostname path])]
+    (cond-> (-> req
+                (assoc-in [:headers "host"] hostname)
+                (assoc :server-name hostname))
+      protocol (assoc :scheme protocol)
+      port     (assoc :server-port port)
+      path     (assoc :uri path))))
 
 (defn ^:private build-throwable [t response-meta op-map]
   (with-meta
@@ -84,7 +95,7 @@
         endpoint (endpoint/fetch endpoint-provider region)]
     (try
       (let [http-request (-> (build-http-request service op-map)
-                             (with-endpoint endpoint)
+                             (with-endpoint endpoint service op-map)
                              (update :body util/->bbuf)
                              ((partial interceptors/modify-http-request service op-map)))
             http-request (if presigned-url
