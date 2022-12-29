@@ -1,31 +1,24 @@
 ;; Copyright (c) Cognitect, Inc.
 ;; All rights reserved.
 
-{:paths   ["src" "resources"]
- :deps    {org.clojure/clojure {:mvn/version "1.10.3"}
-           cheshire/cheshire {:mvn/version "5.10.0"}
-           galdolber/data.xml
-           {:git/url "git@github.com:galdolber/data.xml.git"
-            :sha "e0536ef4e10865b74a67f757105f9c540330c810"}}
- :aliases {:update-versions {:extra-paths ["build/src"]
-                             :main-opts   ["-m" "cognitect.aws.version-updater"]}
-           :dev             {:extra-paths ["dev/src" "dev/resources" "test/src" "test/resources"]
-                             :extra-deps  {commons-io/commons-io       {:mvn/version "2.8.0"}
-                                           org.clojure/test.check      {:mvn/version "1.1.0"}
-                                           org.slf4j/slf4j-log4j12     {:mvn/version "1.7.30"}
-                                           http-kit/http-kit           {:mvn/version "2.5.3"}
-                                           com.cognitect.aws/endpoints {:mvn/version "1.1.11.1001"}
-                                           com.cognitect.aws/s3        {:mvn/version "811.2.889.0"}}}
-           :test            {:extra-deps {com.cognitect/test-runner
-                                          {:git/url "https://github.com/cognitect-labs/test-runner.git"
-                                           :sha     "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
-                             :main-opts  ["-m" "cognitect.test-runner"]}
-           :examples        {:extra-paths ["examples" "examples/resources" "dev/resources"]
-                             :extra-deps  {org.clojure/test.check      {:mvn/version "1.1.0"}
-                                           org.slf4j/slf4j-log4j12     {:mvn/version "1.7.30"}
-                                           com.cognitect.aws/dynamodb  {:mvn/version "810.2.801.0"}
-                                           com.cognitect.aws/ec2       {:mvn/version "811.2.889.0"}
-                                           com.cognitect.aws/iam       {:mvn/version "811.2.889.0"}
-                                           com.cognitect.aws/lambda    {:mvn/version "811.2.865.0"}
-                                           com.cognitect.aws/ssm       {:mvn/version "811.2.889.0"}
-                                           com.cognitect.aws/sts       {:mvn/version "811.2.889.0"}}}}}
+{:paths ["src" "resources"]
+ :deps
+ {org.clojure/clojure {:mvn/version "1.11.1"}
+  cheshire/cheshire {:mvn/version "5.11.0"}
+  galdolber/data.xml
+  {:git/url "git@github.com:galdolber/data.xml.git"
+   :sha "e0536ef4e10865b74a67f757105f9c540330c810"}}
+ :aliases
+ {:update-versions
+  {:extra-paths ["build/src"]
+   :main-opts   ["-m" "cognitect.aws.version-updater"]}
+  :test
+  {:extra-paths ["dev/src" "dev/resources" "test/src" "test/resources"]
+   :extra-deps  {commons-io/commons-io {:mvn/version "2.11.0"}
+                 org.clojure/test.check {:mvn/version "1.1.1"}
+                 http-kit/http-kit {:mvn/version "2.6.0"}}}
+  :run-tests
+  {:extra-deps {com.cognitect/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner.git"
+                 :sha "7284cda41fb9edc0f3bc6b6185cfb7138fc8a023"}}
+   :main-opts  ["-m" "cognitect.test-runner"]}}}
