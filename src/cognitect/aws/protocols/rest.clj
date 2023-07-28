@@ -246,15 +246,19 @@
         (parse-fn output-shape body-str)))))
 
 (defn parse-http-response
-  [service {:keys [op]} {:keys [status body] :as http-response}
+  [service {:keys [op]} {:keys [status body error] :as http-response}
    parse-body-str
    parse-error]
   (if (:cognitect.anomalies/category http-response)
     http-response
     (let [operation    (get-in service [:operations op])
           output-shape (service/shape service (:output operation))]
-      (if (< status 400)
-        (merge (parse-non-payload-attrs output-shape http-response)
-               (when output-shape
-                 (parse-body output-shape body parse-body-str)))
-        (parse-error http-response)))))
+      (if status
+        (if (< status 400)
+          (merge (parse-non-payload-attrs output-shape http-response)
+                 (when output-shape
+                   (parse-body output-shape body parse-body-str)))
+          (parse-error http-response))
+        (if error
+          (throw error)
+          (throw (ex-info "Invalid response status" {:error :invalid-status})))))))
